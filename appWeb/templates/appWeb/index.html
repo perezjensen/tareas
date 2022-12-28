@@ -1,0 +1,829 @@
+
+
+
+
+
+{% extends 'appWeb/base.html' %}
+
+{% load static %}
+
+{% load humanize %} 
+
+{% block content %}
+ 
+
+<br>
+  <!-- Inicio del submenu de informacion  -->
+  <div class="container">
+    <br>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
+                    {% if message.tags == 'warning' %}
+                        {{message}} <a href=" {% url 'revertir_tarea' request.GET.id %} " class="alert-link">Mostrar De Nuevo</a>
+                    {% else %}
+                        {{message}} <a href=" {% url 'activar_tarea' request.GET.id %} " class="alert-link">Activar De Nuevo</a>
+                    {% endif %}
+                    
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>            
+            {% endfor %}
+            
+        {% endif %}
+
+ </div>
+<!-- Fin del submenu de informacion  -->
+
+
+
+<!-- Contenido cambiante inicio   -->
+
+
+
+{% for tarea in tareas %}
+
+
+<div class="container content-task">
+    <div class="row ">
+        <div class="col-2 col-md-1 cont-opt-list">
+            <span class="option-list">
+                {% if colaborador == False %}
+                <a href="#" data-bs-toggle="modal" data-bs-target="#Modaloptask{{tarea.id}}">
+                    <img src=" {% static 'appWeb/images/menuPointsB.png' %} " alt="">
+                </a>
+                {% endif %}
+            </span>
+        </div>
+
+
+        <!-- Modal opciones tareas  -->
+        <div class="modal fade" id="Modaloptask{{tarea.id}}" tabindex="-1" aria-labelledby="Modaloptask{{tarea.id}}Label"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header all-headers">
+                        <h5 class="modal-title all-titles" id="Modaloptask{{tarea.id}}Label">{{tarea.nombre}}</h5>
+
+                        <button type="button" class="btn-close color-secondary" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="alert alert-warning" role="alert">
+                            <h4 class="alert-heading">Anular Tarea!</h4>
+                            <p>La Tarea {{tarea.nombre}} se encuentra en {{tarea.kanban}}, quieres Anularla?</p>
+                            
+                            <hr>
+                            <p class="mb-0">
+                                <a href=" {% url 'anular_tarea' tarea.id %} " type="button" class="btn btn-warning">Anular Tarea</a>
+                            </p>
+                        </div>
+
+
+
+                        <form action=" {% url 'actualizar_todas-tareas' %} " method="POST"  >
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label for="abono" class="form-label">Cambiar Nombre</label>
+                                <input name="nombre" value="{{tarea}}" type="text" class="form-control number-input-desing"
+                                    id="nombre" placeholder="{{tarea}}" >
+                            </div>
+
+                            
+
+
+
+                        <div class="accordion accordion-flush" id="accordionFlushExample">
+                            <div class="accordion-item ">
+                                <h2 class="accordion-header " id="flush-headingOne">
+                                    <button class="accordion-button collapsed all-headers" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                                        aria-expanded="false" aria-controls="flush-collapseOne">
+                                        <p>
+                                        {% if tarea.producto.all %}
+                                        <strong>Producto</strong> &nbsp;  asignado
+                                        {% for producto_actual  in tarea.producto.all %}
+                                            {{producto_actual}},&nbsp;
+                                        {% endfor %}
+                                        
+                                        {% else %}
+                                            No Tienes Productos Asignados
+                                        {% endif %}
+                                        <strong>Abono </strong> &nbsp; asignado
+                                        {{tarea.abono|floatformat:0}}&nbsp;$
+                                        </p>
+                                    </button>
+                                </h2>
+                                <div id="flush-collapseOne" class="accordion-collapse collapse"
+                                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                                    <div class="accordion-body">
+
+
+
+                                        <h5>Seleccione Un Producto</h5>
+
+                                        {% if tarea.producto.all %}
+                                            
+                                            {% for producto_actual  in tarea.producto.all %}
+                                            <div class="form-check">
+                                                <input name ="productos" class="form-check-input" type="checkbox" value="{{producto_actual.id}}" id="flexCheckChecked" checked>
+                                                <label class="form-check-label" for="flexCheckChecked">
+                                                    {{producto_actual}}  
+                                                </label>
+                                            </div>
+
+                                            {% endfor %}
+                                        {% endif %}
+                                        
+
+                               
+                                        {% for producto in productos  %}
+                                            
+                                        
+                                        <div class="form-check">
+                                            <input name="productos" class="form-check-input" type="checkbox" value="{{producto.id}}" id="flexCheckDefault">
+                                            <label class="form-check-label" for="flexCheckDefault">
+                                                {{producto.nombre}}
+                                            </label>
+                                        </div>
+
+                                        {% endfor %}
+                                        
+                                    
+    
+                                        <hr>
+                                        {% if tarea.abono > 0 %}
+                                        <div class="row">
+
+                                            <div class="col-9 col-md-9 task-tablero">
+                                                <h6>Borrar Abono Actual de {{tarea.abono}} </h6>
+                                            </div>
+                                            <div class="col-3 col-md-3 task-tablero">
+                                
+        
+                                                <a class="icon-options" href="{% url 'borrarAbono' tarea.id %}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                                        <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"></path>
+                                                      </svg>
+                                                    </a>
+                                            </div>
+                                
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="mb-3">
+                                            <label for="abono" class="form-label">Ingrese El Abono</label>
+                                            <input name="abono" type="number" class="form-control number-input-desing"
+                                                id="abono">
+                                        </div>
+
+
+
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="flush-headingThree">
+                                    <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#flush-collapseThree"
+                                        aria-expanded="false" aria-controls="flush-collapseThree">
+                                        <p>
+                                        Prioridad actual&nbsp; <strong>{{tarea.prioridad}} </strong> 
+                                        </p>
+                                    </button>
+                                </h2>
+                                <div id="flush-collapseThree" class="accordion-collapse collapse"
+                                    aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            <label for="priority" class="form-label">Selecione un nivel de
+                                                prioridad</label>
+
+                                            <select name="prioridad" id="priority" class="form-select  mb-3 select-desing"
+                                                aria-label=".form-select-lg example">
+                                                <option selected>{{tarea.prioridad}}</option>
+                                                {% for prioridad in  prioridades%}
+                                                <option value="{{prioridad.id}}">{{prioridad.nombre}}</option>
+                                                {% endfor %}
+                                      
+                                            </select>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="flush-headingFour">
+                                    <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#flush-collapseFour"
+                                        aria-expanded="false" aria-controls="flush-collapseFour">
+                                        <p>
+                                        {% if tarea.colaborador.all %}
+                                        {% for colaborador_actual  in tarea.colaborador.all %}
+                                           Colaborador asignado &nbsp;<strong>{{colaborador_actual}}</strong> ,&nbsp;
+                                        {% endfor %}
+                                    {% else %}
+                                        No Tienes un colaborador asignado a esta tarea
+                                    {% endif %}
+                                </p>
+                                    </button>
+                                </h2>
+                                <div id="flush-collapseFour" class="accordion-collapse collapse"
+                                    aria-labelledby="flush-headingFour" data-bs-parent="#accordionFlushExample">
+                                    <div class="accordion-body">
+
+
+                                        
+                                        <h5>Seleccione Un Colaborador</h5>
+
+                                        {% if tarea.colaborador.all %}
+                                            
+                                            {% for colaborador_actual  in tarea.colaborador.all %}
+                                            <div class="form-check">
+                                                <input name ="colaboradores" class="form-check-input" type="checkbox" value="{{colaborador_actual.id}}" id="flexCheckChecked" checked>
+                                                <label class="form-check-label" for="flexCheckChecked">
+                                                    {{colaborador_actual}}  
+                                                </label>
+                                            </div>
+
+                                            {% endfor %}
+                                        {% endif %}
+                                        
+
+                               
+                                        {% for cprecioolaborador in colaboradores %}
+                                            
+                                        
+                                        <div class="form-check">
+                                            <input name="colaboradores" class="form-check-input" type="checkbox" value="{{colaborador.id}}" id="flexCheckDefault">
+                                            <label class="form-check-label" for="flexCheckDefault">
+                                                {{colaborador.nombre}}
+                                            </label>
+                                        </div>
+
+                                        {% endfor %}
+                                        
+
+
+                                    </div>
+                                </div>
+                            </div>
+                           
+                            {% if tarea.producto.all.count == 0 %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="flush-headingFive">
+                                    <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#flush-collapseFive"
+                                        aria-expanded="false" aria-controls="flush-collapseFive">
+                                        Precio Asignado {{tarea.precio}}
+                                    </button>
+                                </h2>
+                                <div id="flush-collapseFive" class="accordion-collapse collapse"
+                                    aria-labelledby="flush-headingFive" data-bs-parent="#accordionFlushExample">
+                                    <div class="accordion-body">
+                                        <div class="mb-3">
+                                            <label for="price2" class="form-label">Asigne Un Precio a La tarea
+</label>
+                                         <input name="precio" type="number" class="form-control number-input-desing"
+                                                id="price2">
+                                        </div>
+                                  
+    
+
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                                <input name="precio" type="hidden" >
+                            {% endif %}
+                            
+                        </div>
+
+
+                    </div>
+
+
+                    <input id="id" name="id" type="hidden" value="{{tarea.id}}">
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Omitir</button>
+                        <input type="submit" class="btn btn-primary primary-bottom-desing" value="Continuar">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+</form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div class="col-2 col-md-1 number-list">
+            <h3>{{ forloop.counter}}</h3>
+        </div>
+        <div class="col-6 col-md-9 body-task">
+            <div class="row">
+                <div class="col">
+
+                    <h6 class="title-task">{{tarea.nombre}}</h6>
+                
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <span class="badge rounded-pill 
+                     {% if tarea.prioridad|lower == "normal" %}
+                     text-bg-primary
+                     {% else %}
+                     text-bg-danger
+                     {% endif %}
+                        
+                    
+                        
+                    
+                     {% if colaborador == False %}
+                  
+                      dropdown-toggle" data-bs-toggle="dropdown"
+                      {% endif %}
+                    aria-expanded="false">{{tarea.prioridad}}
+            
+                    </span>
+
+                    <ul class="dropdown-menu">
+                        {% for prioridad in  prioridades %}
+                        <li><a class="dropdown-item" href=" {% url 'cambiar_prioridad' tarea.id prioridad.id %} ">{{prioridad.nombre}}</a></li>
+                        {% endfor %}
+                       
+                    </ul>
+
+                    <span class="badge rounded-pill 
+                    {% if tarea.kanban|lower == 'en proceso' %}
+                        text-bg-primary                      
+                    {% else %}
+                        text-bg-danger
+                    {% endif %}
+                     dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">{{tarea.kanban}}</span>
+                    <ul class="dropdown-menu">
+                        {% for kanban in kanbans %}
+                        <li><a class="dropdown-item" href=" {% url 'cambiarEstado' tarea.id kanban.id %} ">{{kanban.estado}}</a></li>
+                        {% endfor %}
+                        
+                        
+                    </ul>
+
+                    <span 
+                    
+                    class="badge rounded-pill text-bg-light
+                    {% if colaborador == False %} dropdown-toggle {% endif %}  " {% if colaborador == False %} data-bs-toggle="dropdown" {% endif %} aria-expanded="false">
+                    {% if colaborador == False %}
+                       {% if tarea.colaborador.all %}
+                        {% for colaborador_actual in tarea.colaborador.all %}
+                            {{colaborador_actual.nombre}}&nbsp;
+                        {% endfor %}
+                        {% else %}
+                        Colaborador
+        
+                        {% endif %}
+                        {% else %}
+                            Tarea Asignada
+                        {% endif %}
+
+                       
+                    </span>
+                    
+                    <ul class="dropdown-menu">
+                        
+                        {% for colaborador in colaboradores %}
+                            <li><a class="dropdown-item" href=" {% url 'cambiarColaborador' tarea.id colaborador.id %}">{{colaborador}}</a></li>
+                        {% endfor %}
+
+                    </ul>
+                    {% if colaborador == False %}
+                    <span class="badge rounded-pill text-bg-light " data-bs-toggle="modal"
+                        
+                        data-bs-target="#exampleModal{{tarea.id}}"> 
+                                                                Resta 
+                                                                {% if tarea.producto.all.count == 0 %}
+                                                                    {{tarea.debePrecio|intcomma}}
+                                                                {% else %}
+                                                                    {{tarea.debeProducto|intcomma}}
+                                                                {% endif %}
+                                                                
+                                                                
+                                                                    
+                       </span>
+                       {% endif %}
+                      
+
+
+                    <!-- Modal precios-->
+                    <div class="modal fade" id="exampleModal{{tarea.id}}" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header all-headers">
+                                    <h1 class="modal-title fs-5 all-titles" id="exampleModalLabel">
+                                        
+                                        {{tarea.nombre}} 
+
+                                    </h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    {% if tarea.abono > 0 %}
+
+                                    <div class="alert alert-danger" role="alert">
+                                        <h6>Borrar Abono Actual de {{tarea.abono}}          
+                                            <a style="color:#842029;" href="{% url 'borrarAbono' tarea.id %}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                                <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"></path>
+                                              </svg>
+                                        </a>
+                                    </h6>
+                                      </div>
+                                        {% endif %}
+
+
+                                    <div class="alert alert-success" role="alert">
+                                        <h4 class="alert-heading">Abonar a La Tarea</h4>
+
+                                        
+                                        <form action="{% url 'agregar-deposito' %} " method="POST"> 
+                                            {% csrf_token %}
+                                        <div class="mb-3">
+                                            <label for="price" class="form-label">Ingrese El Abono</label>
+                                            <input name="abono" type="number" class="form-control number-input-desing-alert"
+                                                id="abono">
+                                        </div>
+                                        
+                                        <input value="{{tarea.id}}"  name="id" type="hidden">
+                                        <p class="mb-0">
+
+                                            <input type="submit" class="btn btn-primary primary-bottom-desing" value="Abonar">
+                                            
+                                        </p>
+                                      </div>
+                                    </form>   
+
+                                    {% if tarea.producto.all %}
+                                      <div class="accordion accordion-flush" id="accordionFlushExample">
+                                        <div class="accordion-item ">
+                                            <h2 class="accordion-header " id="flush-headingOne">
+                                                <button class="accordion-button collapsed all-headers" type="button"
+                                                    data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                                                    aria-expanded="false" aria-controls="flush-collapseOne">
+                                                   
+                                                    {% for producto  in tarea.producto.all %}
+                                                      Ver  {{producto}}
+                                                    {% endfor %}
+                                                </button>
+                                            </h2>
+                                            <div id="flush-collapseOne" class="accordion-collapse collapse"
+                                                aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                                                <div class="accordion-body">
+                                                      
+                                                    {% for producto  in tarea.producto.all %}
+                                                
+                                                    
+                                                    <div class="container">
+                                                        <div class="row" style="background-color: white;">
+                                                            <div class="col-4">
+                                                                <img class="img-product" src="/images/productos.jpg" alt="">
+                                                            </div>
+                                                            <div class="col-8">
+                                                                <ul class="list-group list-group-flush">
+                                                                    <li class="list-group-item">Categoria: 
+                                                                        {% for categoria in producto.categoria.all %}
+                                                                            {{categoria}}
+                                                                        {% endfor %}
+                                                                        
+                                                                    
+                                                                    </li>
+                                                                    <li class="list-group-item">Precio: {{producto.precio}}</li>
+                                                                
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                
+                                                    {% endfor %}
+        
+        
+        
+                                                </div>
+                                            </div>
+                                        </div>
+        
+                                  
+                                        
+
+                                  
+        
+                          
+        
+                                    </div>
+                                    {% endif %}
+
+
+
+
+
+
+
+                  
+                           
+
+
+                              
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cerrar</button>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--  fin Modal precios -->
+
+
+                </div>
+            </div>
+        </div>
+        <div class="col-2 col-md-1 check-task">
+            <a href=" {% url 'hecho' tarea.id %} " class="img-check-a">
+                <img class="icon-task" src="  {% static 'appWeb/images/iconCheck.png' %} " alt="">
+
+            </a>
+
+
+
+        </div>
+    </div>
+</div>
+
+{% endfor %}
+
+
+<br>
+<br>
+<br>
+<br>
+<br><br>
+<br>
+<br>
+<br>
+
+{% if colaborador == False %}
+
+<form action=" {% url 'guardar' %} " method="POST">
+    {% csrf_token %}
+<div class="container fixed-bottom content-promt-chat">
+    <div class="row">
+    
+        <di class="col-12">
+            <textarea class="promt-chat" name="mensaje" id="mensaje"></textarea>
+            
+        </di>
+        
+    </div>
+    <div class="row">
+        <div class="col-12 content-button-task">
+            <button type="button" class="btn btn-outline-info button-subnav" data-bs-toggle="modal"
+                data-bs-target="#ModalSaveTask">Guardar Tarea </button>
+               
+
+        </div>
+    </div>
+
+</div>
+
+
+
+
+<!-- Modal Grardar Tarea  -->
+<div class="modal fade" id="ModalSaveTask" tabindex="-1" aria-labelledby="ModalSaveTaskLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header all-headers">
+                <h5 class="modal-title all-titles" id="ModalSaveTaskLabel ">Opciones de tareas</h5>
+                <button type="button" class="btn-close color-secondary" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="accordion accordion-flush" id="accordionFlushExample">
+                    <div class="accordion-item ">
+                        <h2 class="accordion-header " id="flush-headingOne">
+                            <button class="accordion-button collapsed all-headers" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false"
+                                aria-controls="flush-collapseOne">
+                                Producto Y Abono
+                            </button>
+                        </h2>
+                        <div id="flush-collapseOne" class="accordion-collapse collapse"
+                            aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body">
+
+
+
+                                <h5>Seleccione Un Producto</h5>
+
+                           
+                                    
+                                    {% for producto  in productos %}
+                                    <div class="form-check">
+                                        <input name="producto" class="form-check-input" type="checkbox" value="{{producto.id}}" id="flexCheckDefault">
+                                        <label class="form-check-label" for="flexCheckDefault">
+                                            {{producto}}  
+                                        </label>
+                                    </div>
+                            
+
+                                    {% endfor %}
+
+
+
+
+
+                                <hr>
+
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Ingrese El Abono</label>
+                                    <input name="abono" type="number" class="form-control number-input-desing" id="price">
+                                </div>
+
+
+
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="flush-headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#flush-collapseThree" aria-expanded="false"
+                                aria-controls="flush-collapseThree">
+                                Prioridad
+                            </button>
+                        </h2>
+                        <div id="flush-collapseThree" class="accordion-collapse collapse"
+                            aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Selecione un nivel de prioridad</label>
+
+                                    <select name="prioridad" id="priority" class="form-select  mb-3 select-desing"
+                                        aria-label=".form-select-lg example">
+                                        <option selected value="2"> Normal </option>
+                                       {% for prioridad in prioridades  %}
+                                        <option value="{{prioridad.id}}">{{prioridad}}</option>
+                                        {% endfor %}
+                          
+                                    </select>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="flush-headingFour">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#flush-collapseFour" aria-expanded="false"
+                                aria-controls="flush-collapseFour">
+                                Asignar Colaborador
+                            </button>
+                        </h2>
+                        <div id="flush-collapseFour" class="accordion-collapse collapse"
+                            aria-labelledby="flush-headingFour" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body">
+                                <h5>Seleccione Un Colaborador</h5>
+
+                           
+                                    
+                                {% for colaborador  in colaboradores %}
+                                <div class="form-check">
+                                    <input name="colaborador" class="form-check-input" type="checkbox" value="{{colaborador.id}}" id="flexCheckDefault">
+                                    <label class="form-check-label" for="flexCheckDefault">
+                                        {{colaborador}}  
+                                    </label>
+                                </div>
+                        
+
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="flush-headingFive">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#flush-collapseFive" aria-expanded="false"
+                                aria-controls="flush-collapseFive">
+                                Asignar Precio
+                            </button>
+                        </h2>
+                        <div id="flush-collapseFive" class="accordion-collapse collapse"
+                            aria-labelledby="flush-headingFive" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label for="price3" class="form-label">Asigne Un Precio a La tarea </label>
+                                    <input name="precio" type="number" class="form-control number-input-desing" id="price3">
+                                </div>
+                                <hr>
+                               
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Omitir</button>
+               
+                <input type="submit"class="btn btn-primary primary-bottom-desing"  value="Continuar">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</form>
+
+
+{% endif %}
+
+
+<!-- Contenido cambiante fin  -->
+
+
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+    crossorigin="anonymous"></script>
+
+
+</body>
+
+</html>
+
+
+
+  
+{% endblock content %}
+   
